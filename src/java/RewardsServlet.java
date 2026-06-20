@@ -4,106 +4,62 @@
  */
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import model.ClaimedVoucher;
+import model.RewardsDAO;
 
-/**
- *
- * @author adamr
- */
 @WebServlet(urlPatterns = {"/RewardsServlet"})
 public class RewardsServlet extends HttpServlet {
+    private RewardsDAO rewardsDAO = new RewardsDAO();
+    private final int simulatedUserId = 1;
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet RewardsServlet</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet RewardsServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        // TODO: 1. Get current user's point balance from DB
-        // TODO: 2. Get list of claimed vouchers
-        // TODO: 3. request.setAttribute("balance", userPoints);
-        
+        int balance = rewardsDAO.getUserPoints(simulatedUserId);
+        int goal = rewardsDAO.getUserGoal(simulatedUserId);
+        List<ClaimedVoucher> list = rewardsDAO.selectVouchersByUser(simulatedUserId);
+
+        request.setAttribute("balance", balance);
+        request.setAttribute("goal", goal);
+        request.setAttribute("vouchers", list);
         request.getRequestDispatcher("rewards.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
         String action = request.getParameter("action");
-
         try {
-            switch (action) {
-                case "createClaim":
-                    String rewardId = request.getParameter("rewardId");
-                    // TODO: Check if user has enough points. 
-                    // If yes -> Insert into user_rewards DB & deduct points.
-                    System.out.println("Claimed Reward: " + rewardId);
-                    break;
-                    
-                case "updateGoal":
-                    int newGoal = Integer.parseInt(request.getParameter("monthlyGoal"));
-                    // TODO: Update user's profile with the new monthly point goal.
-                    System.out.println("Updated Monthly Goal to: " + newGoal);
-                    break;
-                    
-                case "deleteClaim":
-                    String claimId = request.getParameter("claimId");
-                    // TODO: Delete the voucher from user_rewards DB & refund points.
-                    System.out.println("Removed/Refunded Voucher: " + claimId);
-                    break;
+            if ("createClaim".equals(action)) {
+                String rewardId = request.getParameter("rewardId");
+                String rewardName = "RM10 Grocery Voucher";
+                int points = 500;
+                if ("R02".equals(rewardId)) {
+                    rewardName = "Free Reusable Coffee Cup";
+                    points = 1200;
+                }
+                boolean success = rewardsDAO.claimVoucher(simulatedUserId, rewardName, points);
+                if(!success) {
+                    request.getSession().setAttribute("errorMsg", "Insufficient EcoPoints!");
+                }
+            } else if ("updateGoal".equals(action)) {
+                int newGoal = Integer.parseInt(request.getParameter("monthlyGoal"));
+                rewardsDAO.updateGoal(simulatedUserId, newGoal);
+            } else if ("deleteClaim".equals(action)) {
+                int claimId = Integer.parseInt(request.getParameter("claimId"));
+                int pointsRefunded = Integer.parseInt(request.getParameter("pointsSpent"));
+                rewardsDAO.removeVoucher(claimId, simulatedUserId, pointsRefunded);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            throw new ServletException(e);
         }
-
-        // Redirect to refresh UI
         response.sendRedirect("RewardsServlet");
     }
 }

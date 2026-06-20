@@ -18,7 +18,7 @@ public class WasteLogDAO {
     // Database connection details
     private final String jdbcURL = "jdbc:mysql://localhost:3306/ecoloop_db";
     private final String jdbcUsername = "root";
-    private final String jdbcPassword = "your_password_here"; // Update with your password
+    private final String jdbcPassword = ""; // Update with your password
 
     protected Connection getConnection() {
         Connection connection = null;
