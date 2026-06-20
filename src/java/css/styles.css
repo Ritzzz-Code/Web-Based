@@ -1,0 +1,70 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : 4 May 2026, 2:56:10 pm
+    Author     : adamr
+*/
+
+/* =========================================
+   EcoLoop Global System Styles
+   ========================================= */
+
+:root {
+    --eco-primary: #198754;       /* Emerald Green */
+    --eco-primary-hover: #146c43; /* Darker Green */
+    --eco-bg: #f4f7f6;            /* Soft off-white for background */
+    --eco-card-bg: #ffffff;
+    --eco-text-main: #2c3e50;
+    --eco-text-muted: #6c757d;
+}
+
+body {
+    background-color: var(--eco-bg);
+    color: var(--eco-text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Card UI for Modules */
+.eco-card {
+    background: var(--eco-card-bg);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    padding: 1.5rem;
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Buttons */
+.btn-eco-primary {
+    background-color: var(--eco-primary);
+    color: white;
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-eco-primary:hover {
+    background-color: var(--eco-primary-hover);
+    color: white;
+    box-shadow: 0 4px 8px rgba(25, 135, 84, 0.3);
+}
+
+/* Form Inputs */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--eco-primary);
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* Status Badges */
+.status-pending { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 20px; font-size: 0.85em; }
+.status-completed { background-color: #d1e7dd; color: #0f5132; padding: 5px 10px; border-radius: 20px; font-size: 0.85em; }
