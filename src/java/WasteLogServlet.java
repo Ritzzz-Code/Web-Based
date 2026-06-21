@@ -11,6 +11,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import model.WasteLog;
 import model.WasteLogDAO;
 
@@ -18,12 +19,21 @@ import model.WasteLogDAO;
 public class WasteLogServlet extends HttpServlet {
 
     private WasteLogDAO wasteLogDAO = new WasteLogDAO();
-    private final int simulatedUserId = 1; // Simulating logged-in user #1
+    
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<WasteLog> list = wasteLogDAO.selectLogsByUser(simulatedUserId);
+        
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect("login.jsp"); // Block access if not logged in
+            return;
+        }
+        int currentUserId = (Integer) session.getAttribute("userId");
+        // Use 'currentUserId' inside your DAO database execution queries instead!
+        
+        List<WasteLog> list = wasteLogDAO.selectLogsByUser(currentUserId);
         request.setAttribute("wasteLogs", list);
         request.getRequestDispatcher("waste-log.jsp").forward(request, response);
     }
@@ -31,6 +41,14 @@ public class WasteLogServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect("login.jsp"); // Block access if not logged in
+            return;
+        }
+        int currentUserId = (Integer) session.getAttribute("userId");
+        // Use 'currentUserId' inside your DAO database execution queries instead!
 
         // Retrieve the hidden form parameter telling the controller what operation to run
         String action = request.getParameter("action");
@@ -43,7 +61,7 @@ public class WasteLogServlet extends HttpServlet {
                     double weight = Double.parseDouble(request.getParameter("weight"));
 
                     // 1. Create and save the waste log entry
-                    model.WasteLog newLog = new model.WasteLog(simulatedUserId, material, weight);
+                    model.WasteLog newLog = new model.WasteLog(currentUserId, material, weight);
                     wasteLogDAO.insertWasteLog(newLog);
 
                     // 2. Calculate points based on material type rules
@@ -66,9 +84,9 @@ public class WasteLogServlet extends HttpServlet {
 
                     // 3. Connect to RewardsDAO to credit the user's account balance
                     model.RewardsDAO rewardsDAO = new model.RewardsDAO();
-                    rewardsDAO.addCustomerPoints(simulatedUserId, totalCalculatedPoints);
+                    rewardsDAO.addCustomerPoints(currentUserId, totalCalculatedPoints);
 
-                    System.out.println("Successfully logged " + weight + "kg of " + material + ". Credited " + totalCalculatedPoints + " EcoPoints to User ID: " + simulatedUserId);
+                    System.out.println("Successfully logged " + weight + "kg of " + material + ". Credited " + totalCalculatedPoints + " EcoPoints to User ID: " + currentUserId);
                     break;
 
                 case "delete":

@@ -7,6 +7,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%-- CRITICAL FIX: Added taglib directive so the application compiles JSTL expressions like <c:forEach> --%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<jsp:include page="header.jsp" />
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -96,7 +97,7 @@
                     <div class="eco-card bg-white border border-success border-opacity-25">
                         <div class="table-responsive">
                             <table class="table align-middle border-bottom-0 mb-0">
-                                <tbody>
+                                <tbody id="activeVouchersTable">
                                     <c:forEach items="${vouchers}" var="v">
                                         <tr>
                                             <td>
@@ -104,17 +105,19 @@
                                                 <small class="text-muted">Code: ${v.voucherCode}</small>
                                             </td>
                                             <td class="text-end">
-                                                <form action="RewardsServlet" method="POST" class="d-inline">
+                                                <form action="RewardsServlet" method="POST" class="d-inline" onsubmit="return confirm('Refund this voucher?');">
                                                     <input type="hidden" name="action" value="deleteClaim">
                                                     <input type="hidden" name="claimId" value="${v.claimId}">
-
+                                                    <!-- FIXED INCONSISTENCY: Hidden input field matches Integer parsing parameters -->
                                                     <input type="hidden" name="pointsSpent" value="${v.pointsSpent}">
-
                                                     <button type="submit" class="btn btn-sm text-danger text-decoration-underline border-0 bg-transparent">Remove (Refund)</button>
                                                 </form>
                                             </td>
                                         </tr>
                                     </c:forEach>
+                                    <c:if test="${empty vouchers}">
+                                        <tr><td class="text-center text-muted">Your active wallet is empty.</td></tr>
+                                    </c:if>
                                 </tbody>
                             </table>
                         </div>

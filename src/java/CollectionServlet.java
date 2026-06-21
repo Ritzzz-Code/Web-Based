@@ -12,18 +12,30 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import model.CollectionDAO;
 import model.CollectionRequest;
 
 @WebServlet(urlPatterns = {"/CollectionServlet"})
 public class CollectionServlet extends HttpServlet {
+
     private CollectionDAO collectionDAO = new CollectionDAO();
-    private final int simulatedUserId = 1;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<CollectionRequest> list = collectionDAO.selectRequestsByUser(simulatedUserId);
+
+        // AUTHENTICATION GUARD: Read session securely without generating a new empty state
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect("login.jsp"); // Block guest access instantly
+            return; // Intercept process flow and terminate method execution
+        }
+
+        // Safe context parsed into a dynamic int token
+        int currentUserId = (Integer) session.getAttribute("userId");
+
+        List<CollectionRequest> list = collectionDAO.selectRequestsByUser(currentUserId);
         request.setAttribute("collections", list);
         request.getRequestDispatcher("collection.jsp").forward(request, response);
     }
@@ -32,12 +44,23 @@ public class CollectionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
+
+        // AUTHENTICATION GUARD: Read session securely without generating a new empty state
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect("login.jsp"); // Block guest access instantly
+            return; // Intercept process flow and terminate method execution
+        }
+
+        // Safe context parsed into a dynamic int token
+        int currentUserId = (Integer) session.getAttribute("userId");
+
         try {
             if ("create".equals(action)) {
                 Date date = Date.valueOf(request.getParameter("pickupDate"));
                 String time = request.getParameter("timeSlot");
                 String load = request.getParameter("loadSize");
-                CollectionRequest req = new CollectionRequest(simulatedUserId, date, time, load);
+                CollectionRequest req = new CollectionRequest(currentUserId, date, time, load);
                 collectionDAO.insertRequest(req);
             } else if ("delete".equals(action)) {
                 int requestId = Integer.parseInt(request.getParameter("requestId"));

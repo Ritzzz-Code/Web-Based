@@ -19,7 +19,7 @@ public class AdminDashboardServlet extends HttpServlet {
     
     private final String jdbcURL = "jdbc:mysql://localhost:3306/ecoloop_db";
     private final String jdbcUsername = "root";
-    private final String jdbcPassword = "your_password_here";
+    private final String jdbcPassword = "";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

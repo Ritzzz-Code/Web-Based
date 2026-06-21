@@ -13,9 +13,9 @@ public class User {
     private int userId;
     private String username;
     private String email;
-    private String phoneNumber;
-    private String address;
-    private String role;
+    private String phoneNumber; // Maps to phone_number column
+    private String address;     // Maps to address text column
+    private String role;        // Maps to RESIDENT / ADMIN / STAFF
     private int totalPoints;
     private int monthlyGoal;
 

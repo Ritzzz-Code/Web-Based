@@ -10,34 +10,53 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession; // Added Import
 
 @WebServlet(urlPatterns = {"/ProfileServlet"})
 public class ProfileServlet extends HttpServlet {
     
     private final String jdbcURL = "jdbc:mysql://localhost:3306/ecoloop_db";
     private final String jdbcUsername = "root";
-    private final String jdbcPassword = "your_password_here"; // Update with your MySQL password
-    private final int simulatedUserId = 1; // Simulated active user
+    private final String jdbcPassword = ""; // Update with your MySQL password
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // 1. AUTHENTICATION GUARD: Verify active login session context
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect("login.jsp"); // Intercept guests
+            return; // Terminate execution
+        }
+        
+        // Extract the dynamic user ID token from session attributes
+        int currentUserId = (Integer) session.getAttribute("userId");
+        
         try (Connection conn = DriverManager.getConnection(jdbcURL, jdbcUsername, jdbcPassword)) {
             // Retrieve complete user profile details
             String sql = "SELECT username, email, phone_number, address, total_points, role FROM users WHERE user_id = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1, simulatedUserId);
+                ps.setInt(1, currentUserId); // CHANGED: Replaced simulatedUserId with currentUserId
                 ResultSet rs = ps.executeQuery();
                 
                 if (rs.next()) {
-                    // Inject parameters explicitly into request scope attributes
-                    request.setAttribute("username", rs.getString("username"));
-                    request.setAttribute("email", rs.getString("email"));
-                    request.setAttribute("phone", rs.getString("phone_number"));
-                    request.setAttribute("address", rs.getString("address"));
-                    request.setAttribute("balance", rs.getInt("total_points"));
-                    request.setAttribute("role", rs.getString("role"));
+                    // FIXED LAYER BINDING: Package attributes directly into a User model bean for profile.jsp
+                    model.User user = new model.User();
+                    user.setUsername(rs.getString("username"));
+                    user.setEmail(rs.getString("email"));
+                    user.setPhoneNumber(rs.getString("phone_number"));
+                    user.setAddress(rs.getString("address"));
+                    user.setTotalPoints(rs.getInt("total_points"));
+                    user.setRole(rs.getString("role"));
+                    
+                    // Bind the container object expected by your form fields
+                    request.setAttribute("userObj", user);
+                    
+                    // Keep loose attributes intact for global shared header summaries
+                    request.setAttribute("username", user.getUsername());
+                    request.setAttribute("balance", user.getTotalPoints());
+                    request.setAttribute("role", user.getRole());
                 }
             }
         } catch (SQLException e) {
@@ -52,6 +71,15 @@ public class ProfileServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // 2. AUTHENTICATION GUARD: Protect database modifications from session timeouts
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
+        
+        int currentUserId = (Integer) session.getAttribute("userId");
+        
         // Process Profile Updates (Form Submissions)
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
@@ -63,7 +91,7 @@ public class ProfileServlet extends HttpServlet {
             ps.setString(1, email);
             ps.setString(2, phone);
             ps.setString(3, address);
-            ps.setInt(4, simulatedUserId);
+            ps.setInt(4, currentUserId); // CHANGED: Replaced simulatedUserId with currentUserId
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
