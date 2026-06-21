@@ -29,11 +29,11 @@
         </nav>
 
         <div class="container">
-            <%-- Error Toast Notification Handler (If point thresholds aren't met) --%>
+
+            <%-- Displays point error notifications --%>
             <c:if test="${not empty sessionScope.errorMsg}">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    ⚠️ <strong>Operation Failed:</strong> ${sessionScope.errorMsg}
-                    <%-- Instantly flush flash session attributes so it doesn't linger on page refresh --%>
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    ⚠️ <strong>Error:</strong> ${sessionScope.errorMsg}
                     <c:remove var="errorMsg" scope="session"/>
                 </div>
             </c:if>
@@ -97,25 +97,24 @@
                         <div class="table-responsive">
                             <table class="table align-middle border-bottom-0 mb-0">
                                 <tbody>
-                                <c:forEach items="${vouchers}" var="v">
-                                    <tr>
-                                        <td>
-                                            <strong>${v.rewardName}</strong><br>
-                                            <small class="text-muted">Code: ${v.voucherCode}</small>
-                                        </td>
-                                        <td class="text-end">
-                                            <form action="RewardsServlet" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to return this voucher for a full point refund?');">
-                                                <input type="hidden" name="action" value="deleteClaim">
-                                                <input type="hidden" name="claimId" value="${v.claimId}">
-                                                <input type="hidden" name="pointsSpent" value="${v.pointsSpent}">
-                                                <button type="submit" class="btn btn-sm text-danger text-decoration-underline border-0 bg-transparent">Remove (Refund)</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                                <c:if test="${empty vouchers}">
-                                    <tr><td class="text-center text-muted">Your active wallet is empty.</td></tr>
-                                </c:if>
+                                    <c:forEach items="${vouchers}" var="v">
+                                        <tr>
+                                            <td>
+                                                <strong>${v.rewardName}</strong><br>
+                                                <small class="text-muted">Code: ${v.voucherCode}</small>
+                                            </td>
+                                            <td class="text-end">
+                                                <form action="RewardsServlet" method="POST" class="d-inline">
+                                                    <input type="hidden" name="action" value="deleteClaim">
+                                                    <input type="hidden" name="claimId" value="${v.claimId}">
+
+                                                    <input type="hidden" name="pointsSpent" value="${v.pointsSpent}">
+
+                                                    <button type="submit" class="btn btn-sm text-danger text-decoration-underline border-0 bg-transparent">Remove (Refund)</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
                                 </tbody>
                             </table>
                         </div>
